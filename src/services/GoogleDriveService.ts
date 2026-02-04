@@ -3,8 +3,11 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-if (!API_KEY || !CLIENT_ID) {
-  console.warn('Google API credentials not configured. Please set VITE_GOOGLE_API_KEY and VITE_GOOGLE_CLIENT_ID in .env file');
+if (!API_KEY) {
+  console.error('❌ VITE_GOOGLE_API_KEY not configured. Google Drive features will not work.');
+}
+if (!CLIENT_ID) {
+  console.error('❌ VITE_GOOGLE_CLIENT_ID not configured. Google Drive features will not work.');
 }
 const BACKUP_FILENAME = 'turnario_vvf_backup.json';
 
@@ -13,6 +16,11 @@ let gapiInited = false;
 let gisInited = false;
 
 export const initGoogleScripts = (onInited: () => void) => {
+    if (!API_KEY || !CLIENT_ID) {
+        console.error('Cannot initialize Google Scripts: credentials missing');
+        return;
+    }
+    
     const checkInited = () => {
         if (gapiInited && gisInited) {
             onInited();
