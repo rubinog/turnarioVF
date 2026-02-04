@@ -1,4 +1,4 @@
-# TODO - Prossimi Sviluppi
+# TODO - Prossimi Passi
 
 Elenco delle funzionalità e dei miglioramenti pianificati per il futuro.
 
