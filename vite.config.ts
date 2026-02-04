@@ -4,11 +4,16 @@ import UnoCSS from 'unocss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'child_process'
 
-let commitHash = 'unknown'
-try {
-  commitHash = execSync('git rev-parse --short HEAD').toString().trim()
-} catch (e) {
-  console.warn('Could not get commit hash', e)
+let commitHash = process.env.VITE_APP_VERSION || 'unknown'
+if (commitHash === 'unknown') {
+  try {
+    commitHash = execSync('git rev-parse --short HEAD').toString().trim()
+  } catch (e) {
+    console.warn('Could not get commit hash', e)
+  }
+} else if (commitHash.length > 7) {
+  // Se è un hash completo (40 caratteri), prendi solo i primi 7
+  commitHash = commitHash.substring(0, 7)
 }
 
 // https://vite.dev/config/
