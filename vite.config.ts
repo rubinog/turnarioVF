@@ -16,8 +16,6 @@ export default defineConfig({
   base: '/turnarioVF/',
   define: {
     __APP_VERSION__: JSON.stringify(commitHash),
-    __VITE_GOOGLE_API_KEY__: JSON.stringify(process.env.VITE_GOOGLE_API_KEY || ''),
-    __VITE_GOOGLE_CLIENT_ID__: JSON.stringify(process.env.VITE_GOOGLE_CLIENT_ID || ''),
   },
   plugins: [
     react(),
