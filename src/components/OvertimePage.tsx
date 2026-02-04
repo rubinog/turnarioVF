@@ -41,6 +41,7 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
     const paidHours = filteredEntries
         .filter(([, data]) => data.isOvertimePaid)
         .reduce((acc, [, data]) => acc + calculateHours(data.startTime, data.endTime), 0);
+    const hoursToPay = totalHours - paidHours;
 
     return (
         <div className="space-y-8 pb-10">
@@ -60,8 +61,8 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
                         <CheckCircle2 size={28} />
                     </div>
                     <div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Pagate</p>
-                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{formatHours(paidHours)}</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Da Pagare</p>
+                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{formatHours(hoursToPay)}</p>
                     </div>
                 </div>
             </div>
