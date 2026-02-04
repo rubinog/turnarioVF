@@ -13,7 +13,7 @@ import {
     parse
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { getDayShift, getNightShift, formatShift, type Section } from '../utils/turni';
+import { getDayShift, getNightShift, formatShift, formatHours, type Section } from '../utils/turni';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, Clock, Banknote } from 'lucide-react';
 import { type DayAssignment } from '../App';
@@ -221,7 +221,7 @@ const Calendar: React.FC<CalendarProps> = ({
                     </div>
                     <div>
                         <p className="text-[11px] text-red-600/60 dark:text-red-400/60 font-black uppercase tracking-widest mb-0.5">Straordinari Mensili</p>
-                        <p className="text-3xl font-black text-red-600 dark:text-red-400 leading-none tabular-nums">{totalOvertimeHours.toFixed(1)} <span className="text-sm font-bold opacity-70 italic">h</span></p>
+                        <p className="text-3xl font-black text-red-600 dark:text-red-400 leading-none tabular-nums">{formatHours(totalOvertimeHours)}</p>
                     </div>
                 </div>
                 <div className="bg-amber-500/5 dark:bg-amber-500/10 p-5 rounded-[2rem] border border-amber-500/10 dark:border-amber-500/20 flex items-center gap-5 shadow-inner">
@@ -230,7 +230,7 @@ const Calendar: React.FC<CalendarProps> = ({
                     </div>
                     <div>
                         <p className="text-[11px] text-amber-600/60 dark:text-amber-400/60 font-black uppercase tracking-widest mb-0.5">Servizi PAG Mensili</p>
-                        <p className="text-3xl font-black text-amber-600 dark:text-amber-400 leading-none tabular-nums">{totalPaidServiceHours.toFixed(1)} <span className="text-sm font-bold opacity-70 italic">h</span></p>
+                        <p className="text-3xl font-black text-amber-600 dark:text-amber-400 leading-none tabular-nums">{formatHours(totalPaidServiceHours)}</p>
                     </div>
                 </div>
             </div>
