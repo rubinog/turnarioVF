@@ -6,6 +6,16 @@ export type ShiftInfo = {
     skip: number;
 };
 
+/**
+ * Formats decimal hours to HH:MM format
+ * Example: 12.5 => "12:30", 12 => "12:00"
+ */
+export const formatHours = (decimalHours: number): string => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
 // Reference: 01/01/2025 -> A3
 // Note: Month in Date constructor is 0-indexed (0=Jan)
 const REF_DATE = new Date(2025, 0, 1);

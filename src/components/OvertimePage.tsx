@@ -2,6 +2,7 @@ import React from 'react';
 import { format, getYear, getMonth } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { type DayAssignment } from '../App';
+import { formatHours } from '../utils/turni';
 import { Clock, CheckCircle2, Circle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -51,7 +52,7 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
                     </div>
                     <div>
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Totale Ore</p>
-                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{totalHours.toFixed(1)} <span className="text-sm font-bold opacity-50">h</span></p>
+                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{formatHours(totalHours)}</p>
                     </div>
                 </div>
                 <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 rounded-[2rem] border border-white/20 dark:border-slate-800/50 flex items-center gap-5 shadow-2xl shadow-slate-200/40 dark:shadow-none transition-all hover:scale-[1.02]">
@@ -60,7 +61,7 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
                     </div>
                     <div>
                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Pagate</p>
-                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{paidHours.toFixed(1)} <span className="text-sm font-bold opacity-50">h</span></p>
+                        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{formatHours(paidHours)}</p>
                     </div>
                 </div>
             </div>
@@ -96,7 +97,7 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
                                     <div className="flex flex-col">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                                                {hours.toFixed(1)} <span className="text-xs font-bold text-slate-400">h</span>
+                                                {formatHours(hours)}
                                             </span>
                                             <div className="h-1 w-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
                                             <span className="text-xs font-bold text-vvf uppercase tracking-widest">
