@@ -22,6 +22,8 @@ interface SettingsModalProps {
     onRenamePaidServiceType: (oldName: string, newName: string) => void;
     onExportBackup: () => void;
     onImportBackup: (data: any) => void;
+    onResetAllData: () => void;
+    isCloudConfigured: boolean;
 
     isGoogleAuth: boolean;
     isSyncing: boolean;
@@ -34,8 +36,6 @@ interface SettingsModalProps {
 const SECTIONS: Section[] = ['A', 'B', 'C', 'D'];
 const SKIPS = [1, 2, 3, 4, 5, 6, 7, 8];
 
-const DEFAULT_DAY_COLOR = '#ef4444'; // red-500
-const DEFAULT_NIGHT_COLOR = '#3b82f6'; // blue-500
 const DEFAULT_SKIP_DAY_COLOR = '#d8b4fe'; // light purple
 const DEFAULT_SKIP_NIGHT_COLOR = '#7e22ce'; // dark purple
 
@@ -57,6 +57,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     onRenamePaidServiceType,
     onExportBackup,
     onImportBackup,
+    onResetAllData,
+    isCloudConfigured,
     isGoogleAuth,
     isSyncing,
     onCloudLogin,
@@ -98,9 +100,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     const handleClear = () => {
         if (confirm('Sei sicuro di voler resettare tutti i dati? Questa azione è irreversibile.')) {
-            setSelectedSquad(null);
-            onSave(null, DEFAULT_DAY_COLOR, DEFAULT_NIGHT_COLOR, DEFAULT_SKIP_DAY_COLOR, DEFAULT_SKIP_NIGHT_COLOR);
-            onClose();
+            onResetAllData();
         }
     }
 
@@ -175,7 +175,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="p-2.5 bg-vvf text-white rounded-2xl shadow-lg shadow-vvf/20">
                             <Settings size={22} />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Impostazioni</h2>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Impostazioni</h2>
+                            <span className={clsx(
+                                "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                                isCloudConfigured
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                            )}>
+                                {isCloudConfigured ? 'Cloud pronto' : 'Cloud non configurato'}
+                            </span>
+                        </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all active:scale-95">
                         <X size={24} className="text-slate-500" />
@@ -454,7 +464,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         {!isGoogleAuth ? (
                             <button
                                 onClick={onCloudLogin}
-                                className="w-full flex items-center justify-center gap-4 px-6 py-5 bg-white dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800 hover:border-blue-500 text-slate-700 dark:text-slate-200 rounded-3xl transition-all active:scale-[0.98] group"
+                                disabled={!isCloudConfigured}
+                                className={clsx(
+                                    "w-full flex items-center justify-center gap-4 px-6 py-5 bg-white dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800 hover:border-blue-500 text-slate-700 dark:text-slate-200 rounded-3xl transition-all active:scale-[0.98] group",
+                                    !isCloudConfigured && "opacity-50 cursor-not-allowed hover:border-slate-100 dark:hover:border-slate-800"
+                                )}
                             >
                                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -462,7 +476,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                 </svg>
-                                <span className="text-sm font-black uppercase tracking-widest group-hover:text-blue-500">Accedi con Google</span>
+                                <span className="text-sm font-black uppercase tracking-widest group-hover:text-blue-500">
+                                    {isCloudConfigured ? 'Accedi con Google' : 'Cloud non configurato'}
+                                </span>
                             </button>
                         ) : (
                             <div className="space-y-4">
@@ -496,8 +512,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </div>
                             </div>
                         )}
-                        <p className="mt-4 text-center text-[10px] text-slate-400 font-medium">
-                            I tuoi dati verranno salvati in modo sicuro e privato sul tuo Google Drive.
+                        <p className={clsx(
+                            "mt-4 text-center text-[10px] font-medium",
+                            isCloudConfigured ? "text-slate-400" : "text-amber-500"
+                        )}>
+                            {isCloudConfigured
+                                ? 'I tuoi dati verranno salvati in modo sicuro e privato sul tuo Google Drive.'
+                                : 'Configura VITE_GOOGLE_API_KEY e VITE_GOOGLE_CLIENT_ID nel file .env per abilitare il Cloud Backup.'}
                         </p>
                     </section>
                 </div>

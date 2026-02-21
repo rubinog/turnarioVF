@@ -14,45 +14,116 @@ const BACKUP_FILENAME = 'turnario_vvf_backup.json';
 let tokenClient: any;
 let gapiInited = false;
 let gisInited = false;
+let initPromise: Promise<void> | null = null;
 
-export const initGoogleScripts = (onInited: () => void) => {
+const GOOGLE_INIT_TIMEOUT_MS = 10000;
+
+const assertConfigured = () => {
     if (!API_KEY || !CLIENT_ID) {
-        console.error('Cannot initialize Google Scripts: credentials missing');
-        return;
+        throw new Error('Google Drive non configurato: imposta VITE_GOOGLE_API_KEY e VITE_GOOGLE_CLIENT_ID.');
     }
-    
-    const checkInited = () => {
-        if (gapiInited && gisInited) {
-            onInited();
-        }
-    };
+};
 
-    // Initialize GAPI
-    gapi.load('client', async () => {
-        await gapi.client.init({
-            apiKey: API_KEY,
-            discoveryDocs: [DISCOVERY_DOC],
-        });
-        gapiInited = true;
-        checkInited();
+const waitForGoogleGlobals = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        const startedAt = Date.now();
+
+        const check = () => {
+            if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+                resolve();
+                return;
+            }
+
+            if (Date.now() - startedAt > GOOGLE_INIT_TIMEOUT_MS) {
+                reject(new Error('Script Google non caricati. Verifica connessione o blocchi del browser (adblock/privacy).'));
+                return;
+            }
+
+            setTimeout(check, 200);
+        };
+
+        check();
     });
+};
 
-    // Initialize GIS
+const initGapiClient = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        try {
+            gapi.load('client', async () => {
+                try {
+                    if (!gapiInited) {
+                        await gapi.client.init({
+                            apiKey: API_KEY,
+                            discoveryDocs: [DISCOVERY_DOC],
+                        });
+                        gapiInited = true;
+                    }
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+const initGisClient = () => {
+    if (gisInited && tokenClient) return;
+
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
-        callback: '', // defined at request time
+        callback: () => { },
     });
     gisInited = true;
-    checkInited();
 };
 
-export const login = (): Promise<string> => {
+const ensureGoogleInitialized = async (): Promise<void> => {
+    assertConfigured();
+
+    if (gapiInited && gisInited && tokenClient) {
+        return;
+    }
+
+    if (!initPromise) {
+        initPromise = (async () => {
+            await waitForGoogleGlobals();
+            await initGapiClient();
+            initGisClient();
+        })();
+    }
+
+    try {
+        await initPromise;
+    } finally {
+        initPromise = null;
+    }
+};
+
+export const initGoogleScripts = (onInited: () => void) => {
+    ensureGoogleInitialized()
+        .then(onInited)
+        .catch((error) => {
+            console.error('Google init error:', error);
+        });
+};
+
+export const login = async (): Promise<string> => {
+    await ensureGoogleInitialized();
+
     return new Promise((resolve, reject) => {
         try {
+            if (!tokenClient) {
+                reject(new Error('Client Google OAuth non inizializzato.'));
+                return;
+            }
+
             tokenClient.callback = async (resp: any) => {
                 if (resp.error !== undefined) {
                     reject(resp);
+                    return;
                 }
                 resolve(gapi.client.getToken().access_token);
             };
@@ -71,6 +142,8 @@ export const login = (): Promise<string> => {
 };
 
 export const logout = () => {
+    if (typeof gapi === 'undefined' || typeof google === 'undefined') return;
+
     const token = gapi.client.getToken();
     if (token !== null) {
         google.accounts.oauth2.revoke(token.access_token, () => {
@@ -80,6 +153,8 @@ export const logout = () => {
 };
 
 export const findBackupFile = async () => {
+    await ensureGoogleInitialized();
+
     const response = await gapi.client.drive.files.list({
         q: `name = '${BACKUP_FILENAME}' and trashed = false`,
         fields: 'files(id, name)',
@@ -90,6 +165,8 @@ export const findBackupFile = async () => {
 };
 
 export const uploadBackup = async (content: string) => {
+    await ensureGoogleInitialized();
+
     const existingFile = await findBackupFile();
     const fileId = existingFile ? existingFile.id : null;
 
@@ -129,6 +206,8 @@ export const uploadBackup = async (content: string) => {
 };
 
 export const downloadBackup = async (fileId: string) => {
+    await ensureGoogleInitialized();
+
     const response = await gapi.client.drive.files.get({
         fileId: fileId,
         alt: 'media',

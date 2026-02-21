@@ -5,6 +5,7 @@ import { type DayAssignment } from '../App';
 import { formatHours } from '../utils/turni';
 import { Clock, CheckCircle2, Circle } from 'lucide-react';
 import clsx from 'clsx';
+import { parseDateKey } from '../utils/dateKey';
 
 interface OvertimePageProps {
     assignments: Record<string, DayAssignment>;
@@ -17,7 +18,7 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
     const filteredEntries = Object.entries(assignments)
         .filter(([dateStr, data]) => {
             if (!data.isOvertime) return false;
-            const date = new Date(dateStr);
+            const date = parseDateKey(dateStr);
             const yMatch = getYear(date) === year;
             const mMatch = month === 'all' || getMonth(date) === month;
             return yMatch && mMatch;
@@ -89,10 +90,10 @@ const OvertimePage: React.FC<OvertimePageProps> = ({ assignments, year, month, o
                                 <div className="flex items-center gap-6">
                                     <div className="flex flex-col min-w-[100px] bg-slate-100 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-inner">
                                         <span className="text-lg font-black text-slate-900 dark:text-white capitalize leading-tight">
-                                            {format(new Date(dateStr), 'dd MMM', { locale: it })}
+                                            {format(parseDateKey(dateStr), 'dd MMM', { locale: it })}
                                         </span>
                                         <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1 opacity-70">
-                                            {format(new Date(dateStr), 'yyyy')}
+                                            {format(parseDateKey(dateStr), 'yyyy')}
                                         </span>
                                     </div>
                                     <div className="flex flex-col">

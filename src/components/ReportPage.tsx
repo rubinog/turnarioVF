@@ -2,6 +2,7 @@ import React from 'react';
 import { getYear, getMonth } from 'date-fns';
 import { type DayAssignment } from '../App';
 import { FileBarChart, PieChart } from 'lucide-react';
+import { parseDateKey } from '../utils/dateKey';
 
 interface ReportPageProps {
     assignments: Record<string, DayAssignment>;
@@ -11,7 +12,7 @@ interface ReportPageProps {
 
 const ReportPage: React.FC<ReportPageProps> = ({ assignments, year, month }) => {
     const filteredData = Object.entries(assignments).filter(([dateStr]) => {
-        const date = new Date(dateStr);
+        const date = parseDateKey(dateStr);
         const yMatch = getYear(date) === year;
         const mMatch = month === 'all' || getMonth(date) === month;
         return yMatch && mMatch;

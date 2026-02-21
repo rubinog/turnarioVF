@@ -12,6 +12,7 @@ import { Settings, Calendar as CalendarIcon, FileBarChart, Clock, Banknote } fro
 import clsx from 'clsx'
 import { getYear, getMonth } from 'date-fns'
 import * as GoogleDriveService from './services/GoogleDriveService'
+import { toDateKey } from './utils/dateKey'
 
 const DEFAULT_DAY_COLOR = '#a90708'; // VVF Red
 const DEFAULT_NIGHT_COLOR = '#3b82f6'; // blue-500
@@ -32,7 +33,20 @@ export interface DayAssignment {
 
 type View = 'calendar' | 'report' | 'overtime' | 'paid-services';
 
+const safeParseStorage = <T,>(key: string, fallback: T): T => {
+  const value = localStorage.getItem(key);
+  if (!value) return fallback;
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+};
+
 function App() {
+  const isCloudConfigured = Boolean(import.meta.env.VITE_GOOGLE_API_KEY && import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
   const [currentView, setCurrentView] = useState<View>('calendar');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -48,22 +62,13 @@ function App() {
   const [skipNightColor, setSkipNightColor] = useState<string>(() => localStorage.getItem('skipNightColor') || DEFAULT_SKIP_NIGHT_COLOR);
 
   // Activities State
-  const [activities, setActivities] = useState<string[]>(() => {
-    const saved = localStorage.getItem('customActivities');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [activities, setActivities] = useState<string[]>(() => safeParseStorage<string[]>('customActivities', []));
 
   // Paid Service Types
-  const [paidServiceTypes, setPaidServiceTypes] = useState<string[]>(() => {
-    const saved = localStorage.getItem('paidServiceTypes');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [paidServiceTypes, setPaidServiceTypes] = useState<string[]>(() => safeParseStorage<string[]>('paidServiceTypes', []));
 
   // Assignments State
-  const [assignments, setAssignments] = useState<Record<string, DayAssignment>>(() => {
-    const saved = localStorage.getItem('calendarAssignmentsV2');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [assignments, setAssignments] = useState<Record<string, DayAssignment>>(() => safeParseStorage<Record<string, DayAssignment>>('calendarAssignmentsV2', {}));
 
   // Modal State for Assignment
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -168,7 +173,7 @@ function App() {
   const handleSaveAssignment = (assignment: DayAssignment | null) => {
     if (!selectedDate) return;
 
-    const dateKey = selectedDate.toISOString().split('T')[0];
+    const dateKey = toDateKey(selectedDate);
     const newAssignments = { ...assignments };
 
     if (assignment) {
@@ -253,13 +258,45 @@ function App() {
     window.location.reload();
   };
 
+  const handleResetAllData = () => {
+    const keys = [
+      'userSquad',
+      'dayColor',
+      'nightColor',
+      'skipDayColor',
+      'skipNightColor',
+      'customActivities',
+      'paidServiceTypes',
+      'calendarAssignmentsV2'
+    ];
+
+    keys.forEach((key) => localStorage.removeItem(key));
+
+    setUserSquad(null);
+    setDayColor(DEFAULT_DAY_COLOR);
+    setNightColor(DEFAULT_NIGHT_COLOR);
+    setSkipDayColor(DEFAULT_SKIP_DAY_COLOR);
+    setSkipNightColor(DEFAULT_SKIP_NIGHT_COLOR);
+    setActivities([]);
+    setPaidServiceTypes([]);
+    setAssignments({});
+
+    setFilterYear(getYear(new Date()));
+    setFilterMonth(getMonth(new Date()));
+    setCurrentView('calendar');
+    setIsSettingsOpen(false);
+    setIsDetailModalOpen(false);
+    setSelectedDate(null);
+  };
+
   const handleCloudLogin = async () => {
     try {
       await GoogleDriveService.login();
       setIsGoogleAuth(true);
     } catch (err) {
       console.error('Google Login Error:', err);
-      alert('Errore durante l\'accesso a Google');
+      const message = err instanceof Error ? err.message : 'Errore durante l\'accesso a Google';
+      alert(message);
     }
   };
 
@@ -433,6 +470,8 @@ function App() {
           onRenamePaidServiceType={handleRenamePaidServiceType}
           onExportBackup={handleExportBackup}
           onImportBackup={handleImportBackup}
+          onResetAllData={handleResetAllData}
+          isCloudConfigured={isCloudConfigured}
 
           isGoogleAuth={isGoogleAuth}
           isSyncing={isSyncing}
@@ -448,7 +487,7 @@ function App() {
           date={selectedDate}
           activities={activities}
           paidServiceTypes={paidServiceTypes}
-          currentAssignment={selectedDate ? assignments[selectedDate.toISOString().split('T')[0]] : null}
+          currentAssignment={selectedDate ? assignments[toDateKey(selectedDate)] : null}
           onSave={handleSaveAssignment}
         />
 

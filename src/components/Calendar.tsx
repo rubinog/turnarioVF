@@ -14,6 +14,7 @@ import {
 } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { getDayShift, getNightShift, formatShift, formatHours, type Section } from '../utils/turni';
+import { toDateKey, parseDateKey } from '../utils/dateKey';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, Clock, Banknote } from 'lucide-react';
 import { type DayAssignment } from '../App';
@@ -78,7 +79,7 @@ const Calendar: React.FC<CalendarProps> = ({
     let totalPaidServiceHours = 0;
 
     Object.entries(assignments).forEach(([dateStr, data]) => {
-        const date = new Date(dateStr);
+        const date = parseDateKey(dateStr);
         if (isSameMonth(date, currentDate)) {
             const hours = calculateHours(data.startTime, data.endTime);
             if (data.isOvertime) totalOvertimeHours += hours;
@@ -122,7 +123,7 @@ const Calendar: React.FC<CalendarProps> = ({
                     const nightShift = getNightShift(day);
                     const dayShiftStr = formatShift(dayShift);
                     const nightShiftStr = formatShift(nightShift);
-                    const dateKey = day.toISOString().split('T')[0];
+                    const dateKey = toDateKey(day);
                     const assignment = assignments[dateKey];
                     const isCurrentMonth = isSameMonth(day, currentDate);
 
